@@ -48,6 +48,8 @@ go.work
 .history
 .ionide
 
+*.code-workspace
+
 # Support for Project snippet scope
 .env
 tmp/

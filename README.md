@@ -13,3 +13,7 @@ Check this repo to get Email Service (Kafka Consumer) https://github.com/klanjab
 ## Zookeeper + Kafka
 
 I suggest to use this docker compose configuration to deploy Zookeeper and Kafka. https://github.com/conduktor/kafka-stack-docker-compose
+
+## Postman Collection
+
+To test the API you can use the postman collection `taskcrud.postman_collection.json`
