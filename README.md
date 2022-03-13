@@ -9,3 +9,7 @@
 ## Email Service - Kafka Consumer
 
 Check this repo to get Email Service (Kafka Consumer) https://github.com/klanjabrik/taskcrud-email-service
+
+## Zookeeper + Kafka
+
+I suggest to use this docker compose configuration to deploy Zookeeper and Kafka. https://github.com/conduktor/kafka-stack-docker-compose
