@@ -50,7 +50,7 @@ func FindUsers(c *gin.Context) {
 	m := map[string]interface{}{}
 	if err := models.GetAllUser(&users, m); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, users)
@@ -62,20 +62,20 @@ func CreateUser(c *gin.Context) {
 	// Validate input
 	var input CreateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	// create token verification
 	emailToken, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
@@ -98,7 +98,7 @@ func CreateUser(c *gin.Context) {
 	user := models.User{Username: input.Username, Password: string(hashedPassword), Email: input.Email, EmailToken: string(emailToken)}
 
 	if models.AddNewUser(&user) != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
@@ -111,32 +111,31 @@ func Login(c *gin.Context) { // Get model if exist
 	var user models.User
 	var input LoginInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	m := map[string]interface{}{"username": input.Username}
 	if err := models.GetOneUser(&user, m); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 		return
 	}
 
 	if user.EmailToken != "" {
-		api.RespondError(c, http.StatusForbidden,
-			helpers.GetMessage("email_not_verified"))
+		api.RespondError(c, http.StatusForbidden)
 		return
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(input.Password))
 	if err != nil && err == bcrypt.ErrMismatchedHashAndPassword {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	generatedToken, err := token.GenerateToken(user.ID)
 	if err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
@@ -151,7 +150,7 @@ func ResetPassword(c *gin.Context) { // Get model if exist
 	// db := c.MustGet("db").(*gorm.DB)
 	// if err := db.Where("id = ?", c.Param("id")).First(&task).Error; err != nil {
 	// 	api.RespondError(c, http.StatusBadRequest,
-	// 		helpers.GetFormattedMessage("empty_notfound"))
+	// 		api.WithMessageError(helpers.GetFormattedMessage("empty_notfound")))
 	// 	return
 	// }
 
@@ -165,7 +164,7 @@ func FindUser(c *gin.Context) { // Get model if exist
 
 	if err := models.GetOneUserId(&user, c.Param("id")); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 		return
 	}
 
@@ -180,20 +179,20 @@ func UpdateUser(c *gin.Context) {
 	var user models.User
 	if err := models.GetOneUserId(&user, c.Param("id")); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 		return
 	}
 
 	// Validate input
 	var input UpdateUserInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
@@ -204,7 +203,7 @@ func UpdateUser(c *gin.Context) {
 	}
 
 	if err := models.PutOneUser(&user, updatedInput); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, user)
@@ -217,12 +216,12 @@ func DeleteUser(c *gin.Context) {
 	var user models.User
 	if err := models.GetOneUserId(&user, c.Param("id")); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 		return
 	}
 
 	if err := models.DeleteUser(&user); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, true)
@@ -235,14 +234,14 @@ func VerificationUser(c *gin.Context) {
 	m := map[string]interface{}{"email_token": token[1:]}
 	if err := models.GetOneUser(&user, m); err != nil {
 		api.RespondError(c, http.StatusBadRequest,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "Token"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "Token")))
 		return
 	}
 
 	updatedInput := map[string]interface{}{"email_token": ""}
 
 	if err := models.PutOneUser(&user, updatedInput); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, true)

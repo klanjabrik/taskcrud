@@ -4,21 +4,35 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	DEFAULT_ERROR = "error"
+)
+
 type ResponseSuccessData struct {
 	Status int         `json:"status"`
 	Data   interface{} `json:"data"`
 }
 
 type ResponseSuccessLoginData struct {
-	Status int         `json:"status"`
-	Data   interface{} `json:"data"`
-	Token  string      `json:"token"`
+	ResponseSuccessData
+	Token string `json:"token"`
 }
 
 type ResponseErrorData struct {
-	Status  int         `json:"status"`
-	Message string      `json:"message"`
-	Data    interface{} `json:"data"`
+	ResponseSuccessData
+	Message string `json:"message"`
+}
+
+type RespondMessage struct {
+	Message string
+}
+
+type Option func(*RespondMessage)
+
+func WithMessageError(message string) Option {
+	return func(r *RespondMessage) {
+		r.Message = message
+	}
 }
 
 func RespondSuccess(w *gin.Context, code int, obj interface{}) {
@@ -42,11 +56,20 @@ func RespondLoginSuccess(w *gin.Context, code int, obj interface{}, token string
 	w.JSON(code, res)
 }
 
-func RespondError(w *gin.Context, code int, obj string) {
+func RespondError(w *gin.Context, code int, option ...Option) {
 	var res ResponseErrorData
-
+	r := &RespondMessage{}
 	res.Status = code
-	res.Message = obj
+	for _, o := range option {
+		o(r)
+	}
+
+	if r.Message == "" {
+		res.Message = DEFAULT_ERROR
+	} else {
+		res.Message = r.Message
+	}
+
 	res.Data = map[string]string{} // return {}
 	// res.Data = []string{} // return []
 

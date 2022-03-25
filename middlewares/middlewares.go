@@ -29,7 +29,7 @@ func TaskOwnershipValidation() gin.HandlerFunc {
 		m := map[string]interface{}{"user_id": loggedinUserId, "id": c.Param("id")}
 
 		if err := models.GetOneTask(&task, m); err != nil {
-			api.RespondError(c, http.StatusBadRequest, err.Error())
+			api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 			c.Abort()
 			return
 		}

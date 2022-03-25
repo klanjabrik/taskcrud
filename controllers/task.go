@@ -39,7 +39,7 @@ func FindTasks(c *gin.Context) {
 	m := map[string]interface{}{"user_id": loggedinUserId}
 	if err := models.GetAllTask(&tasks, m); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "User"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "User")))
 		return
 	}
 
@@ -52,13 +52,13 @@ func CreateTask(c *gin.Context) {
 	// Validate input
 	var input CreateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 	deadline, err := time.Parse(os.Getenv("DATETIME_LAYOUT"), input.Deadline)
 	if err != nil {
 		api.RespondError(c, http.StatusBadRequest,
-			helpers.GetMessage("datetime_not_valid"))
+			api.WithMessageError(helpers.GetMessage("datetime_not_valid")))
 		return
 	}
 
@@ -68,7 +68,7 @@ func CreateTask(c *gin.Context) {
 	task := models.Task{AssingedTo: input.AssingedTo, Task: input.Task, Deadline: deadline, UserId: loggedinUserId}
 
 	if models.AddNewTask(&task) != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
@@ -85,7 +85,7 @@ func FindTask(c *gin.Context) { // Get model if exist
 
 	if err := models.GetOneTask(&task, m); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "Task"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "Task")))
 		return
 	}
 
@@ -100,21 +100,21 @@ func UpdateTask(c *gin.Context) {
 	var task models.Task
 	if err := models.GetOneTaskId(&task, c.Param("id")); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "Task"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "Task")))
 		return
 	}
 
 	// Validate input
 	var input UpdateTaskInput
 	if err := c.ShouldBindJSON(&input); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 		return
 	}
 
 	deadline, err := time.Parse(os.Getenv("DATETIME_LAYOUT"), input.Deadline)
 	if err != nil {
 		api.RespondError(c, http.StatusBadRequest,
-			helpers.GetMessage("datetime_not_valid"))
+			api.WithMessageError(helpers.GetMessage("datetime_not_valid")))
 		return
 	}
 
@@ -124,7 +124,7 @@ func UpdateTask(c *gin.Context) {
 	updatedInput.Task = input.Task
 
 	if err := models.PutOneTask(&task, &updatedInput); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, task)
@@ -138,12 +138,12 @@ func DeleteTask(c *gin.Context) {
 
 	if err := models.GetOneTaskId(&task, c.Param("id")); err != nil {
 		api.RespondError(c, http.StatusNotFound,
-			helpers.GetFormattedMessage("empty_notfound_formatted", "Task"))
+			api.WithMessageError(helpers.GetFormattedMessage("empty_notfound_formatted", "Task")))
 		return
 	}
 
 	if err := models.DeleteTask(&task); err != nil {
-		api.RespondError(c, http.StatusBadRequest, err.Error())
+		api.RespondError(c, http.StatusBadRequest, api.WithMessageError(err.Error()))
 	}
 
 	api.RespondSuccess(c, http.StatusOK, true)
